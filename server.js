@@ -71,18 +71,25 @@ app.post("/api/messages", (req, res) => {
   );
 });
 
-const mqttClient = mqtt.connect("mqtt://test.mosquitto.org");
+const mqttClient = mqtt.connect("mqtt://broker.hivemq.com");
 
 mqttClient.on("connect", () => {
-  console.log("Połączono z MQTT");
+  console.log("Połączono z brokerem MQTT");
+
+  mqttClient.subscribe("moj_projekt_studia/status");
+
   setInterval(() => {
-    mqttClient.publish(
-      "moj_projekt_studia/status",
-      "System OK: " + new Date().toLocaleTimeString(),
-    );
+    const statusMsg = "System OK: " + new Date().toLocaleTimeString();
+    mqttClient.publish("moj_projekt_studia/status", statusMsg);
+    console.log("MQTT: Wysłano status do brokera");
   }, 10 * 1000);
 });
 
+mqttClient.on("message", (topic, message) => {
+  console.log(
+    `MQTT: Odebrano wiadomość na temacie [${topic}]: ${message.toString()}`,
+  );
+});
 server.listen(PORT, () => {
   console.log(`Serwer działa na http://localhost:${PORT}`);
 });
