@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projekt</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Czat (HTTP + WS + MQTT)</h2>
+
+      <div id="login-screen">
+        <p>Wpisz nick, aby dołączyć:</p>
+        <input type="text" id="username" placeholder="Podaj nick..." />
+        <button onclick="login()">Wejdź</button>
+      </div>
+
+      <div id="chat-screen">
+        <div id="messages"></div>
+        <div style="display: flex; gap: 10px">
+          <input
+            type="text"
+            id="message-input"
+            placeholder="Wpisz wiadomość..."
+          />
+          <button onclick="sendMessage()">Wyślij</button>
+        </div>
+        <div id="status-mqtt">Status MQTT: Oczekiwanie...</div>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>

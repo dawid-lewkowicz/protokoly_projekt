@@ -1,0 +1,80 @@
+body {
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 0 20px;
+  background-color: #f4f4f9;
+}
+
+.container {
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#chat-screen {
+  display: none;
+}
+
+#messages {
+  height: 300px;
+  border: 1px solid #eee;
+  overflow-y: scroll;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #f9f9f9;
+}
+
+.msg {
+  margin: 5px 0;
+  padding: 8px 12px;
+  border-radius: 15px;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.msg.mine {
+  background: #007bff;
+  color: white;
+  text-align: right;
+  margin-left: auto;
+  border-bottom-right-radius: 2px;
+}
+
+.msg.others {
+  background: #e9ecef;
+  color: black;
+  border: 1px solid #ddd;
+  margin-right: auto;
+  border-bottom-left-radius: 2px;
+}
+
+input {
+  padding: 10px;
+  width: 70%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button {
+  padding: 10px 20px;
+  cursor: pointer;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #218838;
+}
+
+#status-mqtt {
+  margin-top: 20px;
+  font-size: 0.8em;
+  color: gray;
+  text-align: center;
+}
