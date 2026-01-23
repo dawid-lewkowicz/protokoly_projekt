@@ -19,27 +19,30 @@ body {
 }
 
 #messages {
-  height: 300px;
+  height: 350px;
   border: 1px solid #eee;
   overflow-y: scroll;
   padding: 10px;
   margin-bottom: 10px;
   background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
 }
 
 .msg {
   margin: 5px 0;
   padding: 8px 12px;
-  border-radius: 15px;
+  border-radius: 10px;
   max-width: 70%;
   word-wrap: break-word;
+  position: relative;
+  min-width: 120px;
 }
 
 .msg.mine {
   background: #007bff;
   color: white;
-  text-align: right;
-  margin-left: auto;
+  align-self: flex-end;
   border-bottom-right-radius: 2px;
 }
 
@@ -47,15 +50,56 @@ body {
   background: #e9ecef;
   color: black;
   border: 1px solid #ddd;
-  margin-right: auto;
+  align-self: flex-start;
   border-bottom-left-radius: 2px;
+}
+
+.msg-header {
+  font-size: 0.8em;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+.msg-actions {
+  margin-top: 5px;
+  text-align: right;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 4px;
+}
+
+.btn-sm {
+  padding: 2px 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  margin-left: 5px;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+.btn-edit {
+  background: #ffc107;
+  color: black;
+}
+.btn-report {
+  background: #6c757d;
+  color: white;
 }
 
 input {
   padding: 10px;
-  width: 70%;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.input-area input {
+  width: 70%;
+}
+.search-bar input {
+  width: 60%;
 }
 
 button {
@@ -69,19 +113,19 @@ button {
 }
 
 button:hover {
-  background-color: #218838;
+  opacity: 0.9;
+}
+.btn-danger {
+  background-color: #dc3545;
+}
+.btn-secondary {
+  background-color: #6c757d;
 }
 
 #status-mqtt {
+  display: block;
   margin-top: 20px;
   font-size: 0.8em;
   color: gray;
   text-align: center;
-}
-
-input {
-  padding: 10px;
-  width: 250px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
 }
