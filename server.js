@@ -118,8 +118,6 @@ app.post("/api/messages", (req, res) => {
   );
 });
 
-// READ
-
 app.post("/api/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -140,6 +138,8 @@ app.post("/api/login", (req, res) => {
   );
 });
 
+// READ
+
 app.get("/api/messages", (req, res) => {
   const search = req.query.search || "";
   const sql = `SELECT * FROM messages WHERE content LIKE ?`;
@@ -158,16 +158,20 @@ app.get("/api/users", (req, res) => {
   });
 });
 
-app.get("/api/my-messages", (req, res) => {
-  const { username } = req.query;
-  if (!username) {
-    return res.status(400).json({ error: "Podaj parametr username!" });
-  }
-  const sql = "SELECT * FROM messages WHERE sender = ?";
+app.get("/api/feedback", (req, res) => {
+  const sql = "SELECT * FROM feedback";
 
-  db.all(sql, [username], (err, rows) => {
+  db.all(sql, [], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
 
+app.get("/api/reports", (req, res) => {
+  const sql = "SELECT * FROM reports";
+
+  db.all(sql, [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
     res.json(rows);
   });
 });
@@ -281,10 +285,6 @@ app.delete("/api/users/:id", (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Użytkownik usunięty" });
   });
-});
-
-app.post("/api/logout", (req, res) => {
-  res.json({ message: "Wylogowano pomyślnie" });
 });
 
 app.post("/api/logout", (req, res) => {

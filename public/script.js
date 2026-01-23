@@ -81,3 +81,21 @@ socket.on("connect", () => {
   document.getElementById("status-mqtt").innerText =
     "Status: Połączono z serwerem";
 });
+
+function logout() {
+  fetch("/api/logout", {
+    method: "POST",
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      currentUser = null;
+
+      document.getElementById("chat-screen").style.display = "none";
+      document.getElementById("login-screen").style.display = "block";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+
+      alert(data.message);
+    })
+    .catch((err) => console.error("Błąd wylogowania:", err));
+}
