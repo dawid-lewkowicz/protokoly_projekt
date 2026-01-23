@@ -167,8 +167,124 @@ app.get("/api/my-messages", (req, res) => {
 
   db.all(sql, [username], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
+
     res.json(rows);
   });
+});
+
+// UPDATE
+
+app.put("/api/messages/:id", (req, res) => {
+  const id = req.params.id;
+  const { content } = req.body;
+
+  db.run(
+    `UPDATE messages SET content = ? WHERE id = ?`,
+    [content, id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0)
+        return res.status(404).json({ error: "Nie znaleziono wiadomości" });
+
+      res.json({ message: "Zaktualizowano wiadomość", id: id });
+      io.emit("message_updated", { id, content });
+    },
+  );
+});
+
+app.put("/api/users/:id/password", async (req, res) => {
+  const id = req.params.id;
+  const { newPassword } = req.body;
+
+  try {
+    const salt = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    db.run(
+      `UPDATE users SET password = ? WHERE id = ?`,
+      [hashedPassword, id],
+      function (err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0)
+          return res.status(404).json({ error: "Nie znaleziono użytkownika" });
+        res.json({ message: "Hasło zostało zmienione pomyślnie." });
+      },
+    );
+  } catch (err) {
+    res.status(500).json({ error: "Błąd serwera przy szyfrowaniu" });
+  }
+});
+
+app.put("/api/reports/:id", (req, res) => {
+  const id = req.params.id;
+  const { reason } = req.body;
+
+  db.run(
+    `UPDATE reports SET reason = ? WHERE id = ?`,
+    [reason, id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0)
+        return res.status(404).json({ error: "Nie znaleziono zgłoszenia" });
+      res.json({ message: "Zaktualizowano powód zgłoszenia", id: id });
+    },
+  );
+});
+
+app.put("/api/feedback/:id", (req, res) => {
+  const id = req.params.id;
+  const { content } = req.body;
+
+  db.run(
+    `UPDATE feedback SET content = ? WHERE id = ?`,
+    [content, id],
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: "Nie znaleziono takiej opinii" });
+      }
+      res.json({ message: "Opinia została zaktualizowana", id: id });
+    },
+  );
+});
+
+//DELETE
+
+app.delete("/api/messages/:id", (req, res) => {
+  const id = req.params.id;
+  db.run(`DELETE FROM messages WHERE id = ?`, [id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Wiadomość usunięta", id });
+    io.emit("message_deleted", id);
+  });
+});
+
+app.delete("/api/feedback/:id", (req, res) => {
+  const id = req.params.id;
+  db.run(`DELETE FROM feedback WHERE id = ?`, [id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Opinia usunięta" });
+  });
+});
+
+app.delete("/api/reports/:id", (req, res) => {
+  const id = req.params.id;
+  db.run(`DELETE FROM reports WHERE id = ?`, [id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Zgłoszenie usunięte" });
+  });
+});
+
+app.delete("/api/users/:id", (req, res) => {
+  const id = req.params.id;
+  db.run(`DELETE FROM users WHERE id = ?`, [id], function (err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Użytkownik usunięty" });
+  });
+});
+
+app.post("/api/logout", (req, res) => {
+  res.json({ message: "Wylogowano pomyślnie" });
 });
 
 app.post("/api/logout", (req, res) => {
