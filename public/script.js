@@ -2,19 +2,43 @@ const socket = io();
 let currentUser = null;
 
 function login() {
-  const username = document.getElementById("username").value;
-  if (!username) return alert("Podaj nick!");
+  const username = document.getElementById("username").value.trim();
+  const password = document.getElementById("password").value.trim();
 
-  fetch("/api/register", {
+  if (!username || !password) {
+    return alert("Podaj nick i hasło!");
+  }
+
+  fetch("/api/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password: "123" }),
-  }).then(() => {
-    currentUser = username;
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("chat-screen").style.display = "block";
-    loadMessages();
-  });
+    body: JSON.stringify({ username, password }),
+  })
+    .then(async (res) => {
+      if (res.ok) {
+        enterChat(username);
+      } else if (res.status === 401) {
+        alert("Błędne hasło!");
+      } else {
+        // jeśli bie ma usera, rejestrujemy go
+        return fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        }).then((regRes) => {
+          if (regRes.ok) enterChat(username);
+          else alert("Błąd rejestracji");
+        });
+      }
+    })
+    .catch((err) => console.error("Błąd sieci:", err));
+}
+
+function enterChat(username) {
+  currentUser = username;
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("chat-screen").style.display = "block";
+  loadMessages();
 }
 
 function loadMessages() {
@@ -43,8 +67,8 @@ socket.on("chat_message", (msg) => {
   appendMessage(msg);
 });
 
+// pomocnicza funkcja do wyświetlania
 function appendMessage(msg) {
-  // pomocnicza funkcja do wyświetlania
   const div = document.getElementById("messages");
   const el = document.createElement("div");
   el.className = `msg ${msg.sender === currentUser ? "mine" : "others"}`;

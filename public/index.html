@@ -3,30 +3,67 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Projekt</title>
+    <title>Projekt Zaliczeniowy - Protokół Sieci Web</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container">
-      <h2>Czat (HTTP + WS + MQTT)</h2>
+      <header>
+        <h1>Web Protocols Chat</h1>
+      </header>
 
       <div id="login-screen">
-        <p>Wpisz nick, aby dołączyć:</p>
-        <input type="text" id="username" placeholder="Podaj nick..." />
-        <button onclick="login()">Wejdź</button>
+        <div class="card">
+          <h3>Zaloguj się lub utwórz konto</h3>
+          <p>
+            Wpisz swój nick i hasło. Jeśli konto nie istnieje, zostanie
+            automatycznie utworzone.
+          </p>
+          <div class="login-form">
+            <input
+              type="text"
+              id="username"
+              placeholder="Twój Nick"
+              autofocus
+            />
+            <input type="password" id="password" placeholder="Twoje Hasło" />
+            <button onclick="login()">Wejdź do czatu</button>
+          </div>
+        </div>
       </div>
 
-      <div id="chat-screen">
+      <div id="chat-screen" style="display: none">
+        <div class="chat-header">
+          <span>Zalogowany jako: <strong id="user-display"></strong></span>
+          <button onclick="logout()" class="btn-danger">Wyloguj</button>
+        </div>
+
+        <div class="search-bar">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Szukaj w treści wiadomości..."
+          />
+          <button onclick="searchMessages()">Szukaj</button>
+          <button onclick="loadMessages()" class="btn-secondary">Reset</button>
+        </div>
+
         <div id="messages"></div>
-        <div style="display: flex; gap: 10px">
+
+        <div class="input-area">
           <input
             type="text"
             id="message-input"
-            placeholder="Wpisz wiadomość..."
+            placeholder="Napisz wiadomość..."
           />
           <button onclick="sendMessage()">Wyślij</button>
         </div>
-        <div id="status-mqtt">Status MQTT: Oczekiwanie...</div>
+
+        <div class="system-footer">
+          <small id="status-mqtt"
+            >Status MQTT: Oczekiwanie na dane z brokera...</small
+          >
+        </div>
       </div>
     </div>
 
