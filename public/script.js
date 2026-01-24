@@ -204,3 +204,30 @@ socket.on("connect", () => {
   document.getElementById("status-mqtt").innerText =
     "Status: Połączono z serwerem";
 });
+
+function loadReports() {
+  fetch("/api/reports")
+    .then((res) => res.json())
+    .then((data) => {
+      const container = document.getElementById("admin-content");
+      container.innerHTML =
+        "<h4>Zgłoszenia:</h4>" +
+        data
+          .map(
+            (r) =>
+              `<div>Użytkownik: ${r.reported_user}, Powód: ${r.reason}</div>`,
+          )
+          .join("");
+    });
+}
+
+function loadFeedback() {
+  fetch("/api/feedback")
+    .then((res) => res.json())
+    .then((data) => {
+      const container = document.getElementById("admin-content");
+      container.innerHTML =
+        "<h4>Opinie:</h4>" +
+        data.map((f) => `<div>Treść: ${f.content} (${f.date})</div>`).join("");
+    });
+}
