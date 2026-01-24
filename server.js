@@ -5,6 +5,7 @@ const http = require("http");
 const { Server } = require("socket.io"); //obsługuje WebSockety(komunikacja na żywo)
 const mqtt = require("mqtt"); // pozwala komunikowac sie z MQTT
 const bcrypt = require("bcrypt"); // hashowanie haseł
+const fs = require("fs"); // zapisywanie logow w pliku
 
 const app = express();
 const server = http.createServer(app);
@@ -14,9 +15,21 @@ const PORT = 3000;
 app.use(bodyParser.json());
 app.use(express.static("public"));
 
+function logToFile(message) {
+  const timestamp = new Date().toLocaleString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+
+  // dopisywanie logow na koncu pliku
+  fs.appendFile("server.log", logMessage, (err) => {
+    if (err) console.error("Błąd zapisu logów:", err);
+  });
+}
+
 const db = new sqlite3.Database("./database.db", (err) => {
   if (err) console.error(err.message);
-  console.log("Połączono z bazą SQLite.");
+  const msg = "Połączono z bazą SQLite.";
+  console.log(msg);
+  logToFile(msg);
 });
 
 db.serialize(() => {
@@ -130,6 +143,7 @@ app.post("/api/login", (req, res) => {
 
       const match = await bcrypt.compare(password, user.password);
       if (match) {
+        logToFile(`Użytkownik ${user.username} zalogował się.`);
         res.json({ message: "Zalogowano pomyślnie", username: user.username });
       } else {
         res.status(401).json({ error: "Błędne hasło" });
@@ -306,10 +320,12 @@ mqttClient.on("connect", () => {
 });
 
 mqttClient.on("message", (topic, message) => {
-  console.log(
-    `MQTT: Odebrano wiadomość na temacie [${topic}]: ${message.toString()}`,
-  );
+  const msg = `MQTT: Odebrano wiadomość na temacie [${topic}]: ${message.toString()}`;
+  console.log(msg);
+  logToFile(msg);
 });
 server.listen(PORT, () => {
-  console.log(`Serwer działa na http://localhost:${PORT}`);
+  const msg = `Serwer działa na http://localhost:${PORT}`;
+  console.log(msg);
+  logToFile(msg);
 });
