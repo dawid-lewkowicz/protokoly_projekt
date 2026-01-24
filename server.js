@@ -114,6 +114,10 @@ app.post("/api/reports", (req, res) => {
       console.log(`Zgłoszono użytkownika: ${reportedUser}`);
     },
   );
+  mqttClient.publish(
+    "moj_projekt/alerts",
+    "Zgłoszono uzytkownika: " + reportedUser,
+  );
 });
 
 app.post("/api/messages", (req, res) => {
@@ -311,12 +315,13 @@ mqttClient.on("connect", () => {
   console.log("Połączono z brokerem MQTT");
 
   mqttClient.subscribe("moj_projekt/status");
+  mqttClient.subscribe("moj_projekt/alerts");
 
   setInterval(() => {
     const statusMsg = "System OK: " + new Date().toLocaleTimeString();
     mqttClient.publish("moj_projekt/status", statusMsg);
     console.log("MQTT: Wysłano status do brokera");
-  }, 10 * 1000);
+  }, 15 * 1000);
 });
 
 mqttClient.on("message", (topic, message) => {
