@@ -210,14 +210,21 @@ function loadReports() {
     .then((res) => res.json())
     .then((data) => {
       const container = document.getElementById("admin-content");
-      container.innerHTML =
-        "<h4>Zgłoszenia:</h4>" +
-        data
-          .map(
-            (r) =>
-              `<div>Użytkownik: ${r.reported_user}, Powód: ${r.reason}</div>`,
-          )
-          .join("");
+      if (data.length === 0) {
+        container.innerHTML = "<p>Brak zgłoszeń.</p>";
+        return;
+      }
+      let html = "<h4>Lista zgłoszeń:</h4><ul>";
+      data.forEach((r) => {
+        html += `
+          <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
+            <strong>Kogo:</strong> ${r.reported_user} | 
+            <strong>Powód:</strong> ${r.reason} 
+            <button onclick="deleteReport(${r.id})" style="background: #dc3545; padding: 2px 8px; font-size: 0.8em; margin-left: 10px;">Usuń</button>
+          </li>`;
+      });
+      html += "</ul>";
+      container.innerHTML = html;
     });
 }
 
@@ -226,8 +233,44 @@ function loadFeedback() {
     .then((res) => res.json())
     .then((data) => {
       const container = document.getElementById("admin-content");
-      container.innerHTML =
-        "<h4>Opinie:</h4>" +
-        data.map((f) => `<div>Treść: ${f.content} (${f.date})</div>`).join("");
+      if (data.length === 0) {
+        container.innerHTML = "<p>Brak opinii.</p>";
+        return;
+      }
+      let html = "<h4>Opinie użytkowników:</h4><ul>";
+      data.forEach((f) => {
+        html += `
+          <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
+            <em>${f.date}</em>: ${f.content}
+            <button onclick="deleteFeedback(${f.id})" style="background: #dc3545; padding: 2px 8px; font-size: 0.8em; margin-left: 10px;">Usuń</button>
+          </li>`;
+      });
+      html += "</ul>";
+      container.innerHTML = html;
     });
+}
+
+function deleteReport(id) {
+  if (!confirm("Czy na pewno usunąć to zgłoszenie?")) return;
+
+  fetch(`/api/reports/${id}`, { method: "DELETE" }).then((res) => {
+    if (res.ok) {
+      alert("Usunięto zgłoszenie");
+      loadReports();
+    } else {
+      alert("Błąd usuwania");
+    }
+  });
+}
+
+function deleteFeedback(id) {
+  if (!confirm("Czy na pewno usunąć tę opinię?")) return;
+  fetch(`/api/feedback/${id}`, { method: "DELETE" }).then((res) => {
+    if (res.ok) {
+      alert("Usunięto opinię");
+      loadFeedback();
+    } else {
+      alert("Błąd usuwania");
+    }
+  });
 }
