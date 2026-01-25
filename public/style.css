@@ -1,131 +1,290 @@
+:root {
+  --main-color: #10b981;
+  --main-dark: #059669;
+  --bg-color: #f3f4f6;
+  --white: #ffffff;
+  --text: #1f2937;
+  --gray: #6b7280;
+  --border: #e5e7eb;
+  --red: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: sans-serif;
-  max-width: 800px;
-  margin: 20px auto;
-  padding: 0 20px;
-  background-color: #f4f4f9;
+  background-color: var(--bg-color);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.container {
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+button {
+  cursor: pointer;
+  font-family: inherit;
 }
 
-#chat-screen {
-  display: none;
+.hidden {
+  display: none !important;
 }
 
-#messages {
-  height: 350px;
-  border: 1px solid #eee;
-  overflow-y: scroll;
-  padding: 10px;
-  margin-bottom: 10px;
-  background: #f9f9f9;
+.app-container {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  background: var(--white);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
 }
 
-.msg {
-  margin: 5px 0;
-  padding: 8px 12px;
-  border-radius: 10px;
-  max-width: 70%;
-  word-wrap: break-word;
-  position: relative;
-  min-width: 120px;
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 40px;
+  background: var(--white);
+  border-radius: 8px;
+  text-align: center;
+  margin: auto;
+  border: 1px solid var(--border);
 }
 
-.msg.mine {
-  background: #007bff;
-  color: white;
-  align-self: flex-end;
-  border-bottom-right-radius: 2px;
+.login-card h2 {
+  margin-bottom: 20px;
+  color: var(--main-dark);
 }
 
-.msg.others {
-  background: #e9ecef;
-  color: black;
-  border: 1px solid #ddd;
-  align-self: flex-start;
-  border-bottom-left-radius: 2px;
+.form-group {
+  margin-bottom: 15px;
 }
 
-.msg-header {
-  font-size: 0.8em;
-  margin-bottom: 4px;
-  opacity: 0.8;
-}
-
-.msg-actions {
-  margin-top: 5px;
-  text-align: right;
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding-top: 4px;
-}
-
-.btn-sm {
-  padding: 2px 6px;
-  font-size: 12px;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  margin-left: 5px;
-}
-
-.btn-delete {
-  background: #dc3545;
-  color: white;
-}
-.btn-edit {
-  background: #ffc107;
-  color: black;
-}
-.btn-report {
-  background: #6c757d;
-  color: white;
-}
-
-input {
+.input-field {
+  width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 4px;
+  font-size: 16px;
+  outline: none;
 }
 
-.input-area input {
-  width: 70%;
-}
-.search-bar input {
-  width: 60%;
+.input-field:focus {
+  border-color: var(--main-color);
 }
 
-button {
+.btn {
   padding: 10px 20px;
-  cursor: pointer;
-  background: #28a745;
-  color: white;
   border: none;
   border-radius: 4px;
   font-weight: bold;
+  font-size: 14px;
+  transition: background 0.2s;
 }
 
-button:hover {
-  opacity: 0.9;
+.btn-primary {
+  background-color: var(--main-color);
+  color: white;
 }
+
+.btn-primary:hover {
+  background-color: var(--main-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--main-color);
+  color: var(--main-color);
+}
+
+.btn-outline:hover {
+  background: var(--main-color);
+  color: white;
+}
+
 .btn-danger {
-  background-color: #dc3545;
-}
-.btn-secondary {
-  background-color: #6c757d;
+  background-color: var(--red);
+  color: white;
 }
 
-#status-mqtt {
-  display: block;
-  margin-top: 20px;
-  font-size: 0.8em;
-  color: gray;
-  text-align: center;
+.btn-secondary {
+  background-color: var(--gray);
+  color: white;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.chat-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-bar {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--white);
+}
+
+.user-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 350px;
+  background: var(--bg-color);
+  border-right: 1px solid var(--border);
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  background: var(--white);
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.card h3 {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.input-group {
+  display: flex;
+  gap: 5px;
+}
+
+.admin-list ul {
+  list-style: none;
+}
+
+.admin-item {
+  background: var(--bg-color);
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.admin-actions {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+}
+
+.chat-search {
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.messages-area {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chat-input-area {
+  padding: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+}
+
+.btn-send {
+  font-size: 20px;
+  padding: 0 20px;
+}
+
+.msg-wrapper {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+}
+
+.msg-wrapper.mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.msg-wrapper.others {
+  align-self: flex-start;
+}
+
+.msg-header {
+  font-size: 12px;
+  color: var(--gray);
+  margin-bottom: 4px;
+  margin-left: 5px;
+}
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: 12px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.mine .msg-bubble {
+  background: var(--main-color);
+  color: white;
+  border-bottom-right-radius: 2px;
+}
+
+.others .msg-bubble {
+  background: var(--bg-color);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 2px;
+}
+
+.msg-actions {
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.msg-wrapper:hover .msg-actions {
+  opacity: 1;
+}
+
+.mqtt-statusbar {
+  background: var(--bg-color);
+  color: var(--gray);
+  border-top: 1px solid var(--border);
+  padding: 8px 15px;
+  font-size: 11px;
+  font-family: monospace;
+  text-align: right;
 }

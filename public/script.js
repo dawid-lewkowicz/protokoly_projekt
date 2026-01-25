@@ -21,9 +21,7 @@ function login() {
         alert("Błędne hasło!");
       } else {
         const data = await res.json();
-        alert(
-          data.error || "Błąd logowania. Sprawdź dane lub zarejestruj się.",
-        );
+        alert(data.error || "Błąd logowania.");
       }
     })
     .catch((err) => console.error("Błąd sieci:", err));
@@ -58,8 +56,8 @@ function logout() {
   fetch("/api/logout", { method: "POST" }).then(() => {
     currentUser = null;
     currentUserId = null;
-    document.getElementById("chat-screen").style.display = "none";
-    document.getElementById("login-screen").style.display = "block";
+    document.getElementById("chat-screen").classList.add("hidden");
+    document.getElementById("login-screen").classList.remove("hidden");
     document.getElementById("username").value = "";
     document.getElementById("password").value = "";
   });
@@ -69,9 +67,46 @@ function enterChat(username, id) {
   currentUser = username;
   currentUserId = id;
   document.getElementById("user-display").innerText = username;
-  document.getElementById("login-screen").style.display = "none";
-  document.getElementById("chat-screen").style.display = "block";
+  document.getElementById("login-screen").classList.add("hidden");
+  document.getElementById("chat-screen").classList.remove("hidden");
+
   loadMessages();
+  loadReports();
+  loadFeedback();
+}
+
+function deleteAccount() {
+  if (!currentUserId) return;
+  if (
+    !confirm(
+      "CZY NA PEWNO CHCESZ USUNĄĆ KONTO? Tej operacji nie da się cofnąć!",
+    )
+  )
+    return;
+
+  fetch(`/api/users/${currentUserId}`, { method: "DELETE" }).then((res) => {
+    if (res.ok) {
+      alert("Konto usunięte.");
+      location.reload();
+    } else {
+      alert("Błąd usuwania konta.");
+    }
+  });
+}
+
+function changePassword() {
+  if (!currentUserId) return;
+  const newPassword = prompt("Podaj nowe hasło:");
+  if (!newPassword) return;
+
+  fetch(`/api/users/${currentUserId}/password`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newPassword }),
+  }).then(async (res) => {
+    if (res.ok) alert("Hasło zmienione.");
+    else alert("Błąd zmiany hasła.");
+  });
 }
 
 function loadMessages() {
@@ -100,32 +135,61 @@ function sendMessage() {
 }
 
 function deleteMessage(id) {
-  if (!confirm("Czy na pewno chcesz usunąć tę wiadomość?")) return;
-
-  fetch(`/api/messages/${id}`, {
-    method: "DELETE",
-  }).then((res) => {
-    if (!res.ok) alert("Błąd usuwania");
-  });
+  if (!confirm("Usunąć wiadomość?")) return;
+  fetch(`/api/messages/${id}`, { method: "DELETE" });
 }
 
 function editMessage(id) {
-  const newContent = prompt("Edytuj treść wiadomości:");
-  if (newContent === null || newContent.trim() === "") return;
-
+  const newContent = prompt("Edytuj wiadomość:");
+  if (!newContent) return;
   fetch(`/api/messages/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ content: newContent }),
-  }).then((res) => {
-    if (!res.ok) alert("Błąd edycji");
   });
+}
+
+function renderMessages(data) {
+  const container = document.getElementById("messages");
+  container.innerHTML = "";
+  data.forEach((msg) => appendMessage(msg));
+}
+
+function appendMessage(msg) {
+  const container = document.getElementById("messages");
+  const isMine = msg.sender === currentUser;
+
+  const wrapper = document.createElement("div");
+  wrapper.className = `msg-wrapper ${isMine ? "mine" : "others"}`;
+
+  let actionButtons = "";
+  if (isMine) {
+    actionButtons = `
+      <div class="msg-actions">
+        <button onclick="editMessage(${msg.id})" class="btn btn-sm btn-outline">✎</button>
+        <button onclick="deleteMessage(${msg.id})" class="btn btn-sm btn-danger">✕</button>
+      </div>`;
+  } else {
+    actionButtons = `
+      <div class="msg-actions">
+        <button onclick="reportUser('${msg.sender}')" class="btn btn-sm btn-outline">!</button>
+      </div>`;
+  }
+
+  wrapper.innerHTML = `
+    <div class="msg-header">${msg.sender}</div>
+    <div class="msg-bubble">${msg.content}</div>
+    ${actionButtons}
+  `;
+
+  container.appendChild(wrapper);
+  container.scrollTop = container.scrollHeight;
 }
 
 function sendFeedback() {
   const input = document.getElementById("feedback-input");
   const content = input.value;
-  if (!content) return alert("Wpisz opinię!");
+  if (!content) return;
 
   fetch("/api/feedback", {
     method: "POST",
@@ -136,119 +200,21 @@ function sendFeedback() {
     .then((data) => {
       alert(data.message);
       input.value = "";
+      loadFeedback();
     });
 }
 
 function reportUser(reportedUser) {
-  const reason = prompt(`Dlaczego chcesz zgłosić użytkownika ${reportedUser}?`);
+  const reason = prompt(`Powód zgłoszenia użytkownika ${reportedUser}:`);
   if (!reason) return;
 
   fetch("/api/reports", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ reportedUser, reason }),
-  })
-    .then((res) => res.json())
-    .then((data) => alert(data.message))
-    .catch(() => alert("Błąd zgłoszenia"));
-}
-
-function renderMessages(data) {
-  const div = document.getElementById("messages");
-  div.innerHTML = "";
-  data.forEach((msg) => appendMessage(msg));
-}
-
-function appendMessage(msg) {
-  const div = document.getElementById("messages");
-  const el = document.createElement("div");
-  const isMine = msg.sender === currentUser;
-
-  el.className = `msg ${isMine ? "mine" : "others"}`;
-
-  let actionButtons = "";
-
-  if (isMine) {
-    actionButtons = `
-      <div class="msg-actions">
-        <button onclick="editMessage(${msg.id})" class="btn-sm btn-edit">✎</button>
-        <button onclick="deleteMessage(${msg.id})" class="btn-sm btn-delete">✕</button>
-      </div>
-    `;
-  } else {
-    actionButtons = `
-      <div class="msg-actions">
-        <button onclick="reportUser('${msg.sender}')" class="btn-sm btn-report" title="Zgłoś użytkownika">!</button>
-      </div>
-    `;
-  }
-
-  el.innerHTML = `
-    <div class="msg-header"><strong>${msg.sender}</strong></div>
-    <div class="msg-content">${msg.content}</div>
-    ${actionButtons}
-  `;
-
-  div.appendChild(el);
-  div.scrollTop = div.scrollHeight;
-}
-
-function deleteAccount() {
-  if (!currentUserId) return alert("Błąd: Nie rozpoznano ID użytkownika.");
-  if (
-    !confirm(
-      "CZY NA PEWNO CHCESZ USUNĄĆ KONTO? Tej operacji nie da się cofnąć!",
-    )
-  )
-    return;
-
-  fetch(`/api/users/${currentUserId}`, {
-    method: "DELETE",
-  })
-    .then((res) => {
-      if (res.ok) {
-        alert("Konto zostało usunięte.");
-        location.reload();
-      } else {
-        alert("Błąd podczas usuwania konta.");
-      }
-    })
-    .catch((err) => console.error(err));
-}
-
-function editReport(id) {
-  const newReason = prompt("Podaj nowy powód zgłoszenia:");
-  if (newReason === null || newReason.trim() === "") return;
-
-  fetch(`/api/reports/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ reason: newReason }),
   }).then((res) => {
-    if (res.ok) {
-      alert("Zaktualizowano zgłoszenie");
-      loadReports();
-    } else {
-      alert("Błąd edycji");
-    }
-  });
-}
-
-function editFeedback(id) {
-  const newContent = prompt("Edytuj treść opinii:");
-  if (newContent === null || newContent.trim() === "") return;
-
-  fetch(`/api/feedback/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ content: newContent }),
-  }).then((res) => {
-    if (res.ok) {
-      alert("Zaktualizowano opinię");
-      loadFeedback();
-    } else {
-      alert("Błąd edycji");
-    }
+    if (res.ok) alert("Zgłoszono użytkownika.");
+    loadReports();
   });
 }
 
@@ -258,43 +224,26 @@ function loadReports() {
     .then((data) => {
       const container = document.getElementById("admin-content");
       if (data.length === 0) {
-        container.innerHTML = "<p>Brak zgłoszeń.</p>";
+        container.innerHTML = "<p class='placeholder-text'>Brak zgłoszeń.</p>";
         return;
       }
-      let html = "<h4>Lista zgłoszeń:</h4><ul>";
+      let html = "<ul>";
       data.forEach((r) => {
         html += `
-          <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
-            <strong>Kogo:</strong> ${r.reported_user} | 
-            <strong>Powód:</strong> ${r.reason} 
-            <button onclick="editReport(${r.id})" class="btn-sm btn-edit" style="margin-left: 10px;">Edytuj</button>
-            <button onclick="deleteReport(${r.id})" class="btn-sm btn-delete" style="margin-left: 5px;">Usuń</button>
+          <li class="admin-item">
+            <div>
+                <strong>${r.reported_user}</strong><br>
+                <small>${r.reason}</small>
+            </div>
+            <div class="admin-actions">
+                <button onclick="editReport(${r.id})" class="btn btn-sm btn-outline">Edytuj</button>
+                <button onclick="deleteReport(${r.id})" class="btn btn-sm btn-danger">Usuń</button>
+            </div>
           </li>`;
       });
       html += "</ul>";
       container.innerHTML = html;
     });
-}
-
-function changePassword() {
-  if (!currentUserId) return alert("Błąd: Nie rozpoznano ID użytkownika.");
-  const newPassword = prompt("Podaj nowe hasło:");
-  if (newPassword === null || newPassword.trim() === "") return;
-
-  fetch(`/api/users/${currentUserId}/password`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ newPassword: newPassword }),
-  })
-    .then(async (res) => {
-      if (res.ok) {
-        alert("Hasło zostało zmienione pomyślnie.");
-      } else {
-        const data = await res.json();
-        alert(data.error || "Błąd zmiany hasła");
-      }
-    })
-    .catch((err) => console.error("Błąd sieci:", err));
 }
 
 function loadFeedback() {
@@ -302,72 +251,80 @@ function loadFeedback() {
     .then((res) => res.json())
     .then((data) => {
       const container = document.getElementById("admin-content");
-      if (data.length === 0) {
-        container.innerHTML = "<p>Brak opinii.</p>";
-        return;
-      }
-      let html = "<h4>Opinie użytkowników:</h4><ul>";
+      const currentHtml = container.innerHTML.includes("Brak zgłoszeń")
+        ? ""
+        : container.innerHTML;
+
+      let html = "<hr class='admin-divider'><h5>Opinie:</h5><ul>";
+      if (data.length === 0)
+        html += "<p class='placeholder-text'>Brak opinii.</p>";
+
       data.forEach((f) => {
         html += `
-          <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
-            <em>${f.date}</em>: ${f.content}
-            <button onclick="editFeedback(${f.id})" class="btn-sm btn-edit" style="margin-left: 10px;">Edytuj</button>
-            <button onclick="deleteFeedback(${f.id})" class="btn-sm btn-delete" style="margin-left: 5px;">Usuń</button>
-          </li>`;
+            <li class="admin-item">
+                <div>
+                    <small>${f.date}</small><br>
+                    ${f.content}
+                </div>
+                <div class="admin-actions">
+                    <button onclick="editFeedback(${f.id})" class="btn btn-sm btn-outline">Edytuj</button>
+                    <button onclick="deleteFeedback(${f.id})" class="btn btn-sm btn-danger">Usuń</button>
+                </div>
+            </li>`;
       });
       html += "</ul>";
-      container.innerHTML = html;
+      container.innerHTML = currentHtml + html;
     });
 }
 
-function deleteReport(id) {
-  if (!confirm("Czy na pewno usunąć to zgłoszenie?")) return;
+function editReport(id) {
+  const newReason = prompt("Nowy powód zgłoszenia:");
+  if (!newReason) return;
+  fetch(`/api/reports/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: newReason }),
+  }).then(() => {
+    loadReports();
+  });
+}
 
-  fetch(`/api/reports/${id}`, { method: "DELETE" }).then((res) => {
-    if (res.ok) {
-      alert("Usunięto zgłoszenie");
-      loadReports();
-    } else {
-      alert("Błąd usuwania");
-    }
+function deleteReport(id) {
+  if (!confirm("Usunąć zgłoszenie?")) return;
+  fetch(`/api/reports/${id}`, { method: "DELETE" }).then(() => {
+    loadReports();
+  });
+}
+
+function editFeedback(id) {
+  const newContent = prompt("Edytuj treść:");
+  if (!newContent) return;
+  fetch(`/api/feedback/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: newContent }),
+  }).then(() => {
+    loadFeedback();
   });
 }
 
 function deleteFeedback(id) {
-  if (!confirm("Czy na pewno usunąć tę opinię?")) return;
-  fetch(`/api/feedback/${id}`, { method: "DELETE" }).then((res) => {
-    if (res.ok) {
-      alert("Usunięto opinię");
-      loadFeedback();
-    } else {
-      alert("Błąd usuwania");
-    }
+  if (!confirm("Usunąć opinię?")) return;
+  fetch(`/api/feedback/${id}`, { method: "DELETE" }).then(() => {
+    loadFeedback();
   });
 }
 
-socket.on("chat_message", (msg) => {
-  appendMessage(msg);
-});
+socket.on("chat_message", (msg) => appendMessage(msg));
+socket.on("message_updated", () => loadMessages());
+socket.on("message_deleted", () => loadMessages());
 
-socket.on("message_updated", (data) => {
-  loadMessages();
-});
-
-socket.on("message_deleted", (id) => {
-  loadMessages();
+socket.on("mqtt_message", (data) => {
+  const statusElement = document.getElementById("status-mqtt");
+  statusElement.innerHTML = `MQTT [${data.time}]: ${data.topic} -> ${data.content}`;
 });
 
 socket.on("connect", () => {
   document.getElementById("status-mqtt").innerText =
-    "Status: Połączono z serwerem";
-});
-
-socket.on("mqtt_message", (data) => {
-  const statusElement = document.getElementById("status-mqtt");
-
-  statusElement.innerHTML = `
-    <strong>MQTT Live (${data.time}):</strong> 
-    Temat: <span style="color: #007bff">${data.topic}</span> | 
-    Treść: ${data.content}
-  `;
+    "MQTT Status: Połączono z serwerem";
 });

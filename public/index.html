@@ -3,130 +3,122 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Projekt</title>
+    <title>Projekt Protokoły</title>
     <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
-    <div class="container">
-      <header>
-        <h1>Chat internetowy</h1>
-      </header>
-
-      <div id="login-screen">
-        <div class="card">
-          <h3>Zaloguj się lub utwórz konto</h3>
-          <p>Wpisz nick i hasło, a następnie wybierz odpowiednią opcję.</p>
-          <div class="login-form">
-            <input
-              type="text"
-              id="username"
-              placeholder="Twój Nick"
-              autofocus
-            />
-            <input type="password" id="password" placeholder="Twoje Hasło" />
-
-            <div
-              style="
-                display: flex;
-                gap: 10px;
-                justify-content: center;
-                margin-top: 10px;
-              "
-            >
-              <button onclick="login()" style="flex: 1">Zaloguj</button>
-              <button
-                onclick="register()"
-                style="flex: 1; background-color: #6c757d"
-              >
-                Zarejestruj
-              </button>
-            </div>
-          </div>
+    <div class="app-container">
+      <div id="login-screen" class="login-card">
+        <h2 class="app-title">Witaj w Aplikacji</h2>
+        <div class="form-group">
+          <input
+            type="text"
+            id="username"
+            placeholder="Nazwa użytkownika"
+            class="input-field"
+          />
+        </div>
+        <div class="form-group">
+          <input
+            type="password"
+            id="password"
+            placeholder="Hasło"
+            class="input-field"
+          />
+        </div>
+        <div class="auth-buttons">
+          <button onclick="login()" class="btn btn-primary">Zaloguj się</button>
+          <button onclick="register()" class="btn btn-outline">
+            Zarejestruj
+          </button>
         </div>
       </div>
 
-      <div id="chat-screen" style="display: none">
-        <div class="chat-header">
-          <span>Zalogowany jako: <strong id="user-display"></strong></span>
-          <div>
-            <button
-              onclick="changePassword()"
-              style="background-color: #ffc107; color: black; margin-right: 5px"
-            >
+      <div id="chat-screen" class="chat-layout hidden">
+        <header class="top-bar">
+          <div class="user-info">
+            Zalogowany jako: <strong id="user-display"></strong>
+          </div>
+          <div class="user-actions">
+            <button onclick="changePassword()" class="btn btn-sm btn-warning">
               Zmień hasło
             </button>
-            <button
-              onclick="deleteAccount()"
-              class="btn-danger"
-              style="margin-right: 5px"
-            >
+            <button onclick="deleteAccount()" class="btn btn-sm btn-danger">
               Usuń konto
             </button>
-            <button onclick="logout()" class="btn-secondary">Wyloguj</button>
-          </div>
-        </div>
-
-        <div class="search-bar">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Szukaj w treści wiadomości..."
-          />
-          <button onclick="searchMessages()">Szukaj</button>
-          <button onclick="loadMessages()" class="btn-secondary">Reset</button>
-        </div>
-
-        <div id="messages"></div>
-
-        <div class="input-area">
-          <input
-            type="text"
-            id="message-input"
-            placeholder="Napisz wiadomość..."
-          />
-          <button onclick="sendMessage()">Wyślij</button>
-        </div>
-
-        <div
-          style="
-            margin-top: 30px;
-            border-top: 1px solid #ccc;
-            padding-top: 15px;
-          "
-        >
-          <h4>Wyślij opinię o aplikacji</h4>
-          <div style="display: flex; gap: 10px">
-            <input
-              type="text"
-              id="feedback-input"
-              placeholder="Np. Fajna aplikacja"
-              style="width: 70%"
-            />
-            <button onclick="sendFeedback()" style="background-color: #17a2b8">
-              Wyślij Opinię
+            <button onclick="logout()" class="btn btn-sm btn-secondary">
+              Wyloguj
             </button>
           </div>
-        </div>
+        </header>
 
-        <div
-          id="admin-panel"
-          style="
-            margin-top: 30px;
-            border-top: 1px dashed #999;
-            padding-top: 15px;
-          "
-        >
-          <h3>Panel Admina</h3>
-          <button onclick="loadReports()">Pokaż Zgłoszenia</button>
-          <button onclick="loadFeedback()">Pokaż Opinie</button>
-          <div id="admin-content" style="margin-top: 10px"></div>
-        </div>
+        <main class="main-content">
+          <aside class="sidebar">
+            <div class="card">
+              <h3>Opinie / Feedback</h3>
+              <div class="input-group">
+                <input
+                  type="text"
+                  id="feedback-input"
+                  placeholder="Twoja opinia..."
+                  class="input-field"
+                />
+                <button onclick="sendFeedback()" class="btn btn-primary">
+                  Wyślij
+                </button>
+              </div>
+            </div>
 
-        <div class="system-footer">
-          <small id="status-mqtt"
-            >Status MQTT: Oczekiwanie na dane z brokera...</small
-          >
-        </div>
+            <div class="card admin-panel">
+              <h3>Panel Administracyjny</h3>
+              <div id="admin-content" class="admin-list">
+                <p class="placeholder-text">Ładowanie danych...</p>
+              </div>
+              <div class="admin-controls">
+                <button onclick="loadReports()" class="btn btn-sm btn-outline">
+                  Odśwież Zgłoszenia
+                </button>
+                <button onclick="loadFeedback()" class="btn btn-sm btn-outline">
+                  Odśwież Opinie
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          <section class="chat-container">
+            <div class="chat-search">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Szukaj wiadomości..."
+                oninput="searchMessages()"
+                class="input-field"
+              />
+            </div>
+
+            <div id="messages" class="messages-area"></div>
+
+            <div class="chat-input-area">
+              <input
+                type="text"
+                id="message-input"
+                placeholder="Wpisz wiadomość..."
+                class="input-field"
+              />
+              <button onclick="sendMessage()" class="btn btn-primary btn-send">
+                ➤
+              </button>
+            </div>
+          </section>
+        </main>
+
+        <footer class="mqtt-statusbar">
+          <div id="status-mqtt">MQTT Status: Oczekiwanie na połączenie...</div>
+        </footer>
       </div>
     </div>
 
