@@ -329,10 +329,19 @@ mqttClient.on("connect", () => {
 });
 
 mqttClient.on("message", (topic, message) => {
-  const msg = `MQTT: Odebrano wiadomość na temacie [${topic}]: ${message.toString()}`;
-  console.log(msg);
-  logToFile(msg);
+  const msgContent = message.toString();
+  console.log(`Otrzymano wiadomość MQTT na temat ${topic}: ${msgContent}`);
+
+  if (topic === "moj_projekt/logs") {
+    logToFile(`[MQTT LOG] ${msgContent}`);
+  }
+  io.emit("mqtt_message", {
+    topic: topic,
+    content: msgContent,
+    time: new Date().toLocaleTimeString(),
+  });
 });
+
 server.listen(PORT, () => {
   const msg = `Serwer działa na http://localhost:${PORT}`;
   console.log(msg);

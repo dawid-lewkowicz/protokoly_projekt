@@ -252,23 +252,6 @@ function editFeedback(id) {
   });
 }
 
-socket.on("chat_message", (msg) => {
-  appendMessage(msg);
-});
-
-socket.on("message_updated", (data) => {
-  loadMessages();
-});
-
-socket.on("message_deleted", (id) => {
-  loadMessages();
-});
-
-socket.on("connect", () => {
-  document.getElementById("status-mqtt").innerText =
-    "Status: Połączono z serwerem";
-});
-
 function loadReports() {
   fetch("/api/reports")
     .then((res) => res.json())
@@ -291,6 +274,27 @@ function loadReports() {
       html += "</ul>";
       container.innerHTML = html;
     });
+}
+
+function changePassword() {
+  if (!currentUserId) return alert("Błąd: Nie rozpoznano ID użytkownika.");
+  const newPassword = prompt("Podaj nowe hasło:");
+  if (newPassword === null || newPassword.trim() === "") return;
+
+  fetch(`/api/users/${currentUserId}/password`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ newPassword: newPassword }),
+  })
+    .then(async (res) => {
+      if (res.ok) {
+        alert("Hasło zostało zmienione pomyślnie.");
+      } else {
+        const data = await res.json();
+        alert(data.error || "Błąd zmiany hasła");
+      }
+    })
+    .catch((err) => console.error("Błąd sieci:", err));
 }
 
 function loadFeedback() {
@@ -340,3 +344,30 @@ function deleteFeedback(id) {
     }
   });
 }
+
+socket.on("chat_message", (msg) => {
+  appendMessage(msg);
+});
+
+socket.on("message_updated", (data) => {
+  loadMessages();
+});
+
+socket.on("message_deleted", (id) => {
+  loadMessages();
+});
+
+socket.on("connect", () => {
+  document.getElementById("status-mqtt").innerText =
+    "Status: Połączono z serwerem";
+});
+
+socket.on("mqtt_message", (data) => {
+  const statusElement = document.getElementById("status-mqtt");
+
+  statusElement.innerHTML = `
+    <strong>MQTT Live (${data.time}):</strong> 
+    Temat: <span style="color: #007bff">${data.topic}</span> | 
+    Treść: ${data.content}
+  `;
+});
