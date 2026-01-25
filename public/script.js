@@ -1,5 +1,6 @@
 const socket = io();
 let currentUser = null;
+let currentUserId = null;
 
 function login() {
   const username = document.getElementById("username").value.trim();
@@ -14,7 +15,8 @@ function login() {
   })
     .then(async (res) => {
       if (res.ok) {
-        enterChat(username);
+        const data = await res.json();
+        enterChat(data.username, data.id);
       } else if (res.status === 401) {
         alert("Błędne hasło!");
       } else {
@@ -41,8 +43,9 @@ function register() {
   })
     .then(async (res) => {
       if (res.ok) {
-        alert("Zarejestrowano pomyślnie! Zostaniesz zalogowany.");
-        enterChat(username);
+        alert("Zarejestrowano pomyślnie!");
+        const data = await res.json();
+        enterChat(data.username, data.id);
       } else {
         const data = await res.json();
         alert(data.error || "Błąd rejestracji");
@@ -54,6 +57,7 @@ function register() {
 function logout() {
   fetch("/api/logout", { method: "POST" }).then(() => {
     currentUser = null;
+    currentUserId = null;
     document.getElementById("chat-screen").style.display = "none";
     document.getElementById("login-screen").style.display = "block";
     document.getElementById("username").value = "";
@@ -61,8 +65,9 @@ function logout() {
   });
 }
 
-function enterChat(username) {
+function enterChat(username, id) {
   currentUser = username;
+  currentUserId = id;
   document.getElementById("user-display").innerText = username;
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("chat-screen").style.display = "block";
@@ -188,6 +193,65 @@ function appendMessage(msg) {
   div.scrollTop = div.scrollHeight;
 }
 
+function deleteAccount() {
+  if (!currentUserId) return alert("Błąd: Nie rozpoznano ID użytkownika.");
+  if (
+    !confirm(
+      "CZY NA PEWNO CHCESZ USUNĄĆ KONTO? Tej operacji nie da się cofnąć!",
+    )
+  )
+    return;
+
+  fetch(`/api/users/${currentUserId}`, {
+    method: "DELETE",
+  })
+    .then((res) => {
+      if (res.ok) {
+        alert("Konto zostało usunięte.");
+        location.reload();
+      } else {
+        alert("Błąd podczas usuwania konta.");
+      }
+    })
+    .catch((err) => console.error(err));
+}
+
+function editReport(id) {
+  const newReason = prompt("Podaj nowy powód zgłoszenia:");
+  if (newReason === null || newReason.trim() === "") return;
+
+  fetch(`/api/reports/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason: newReason }),
+  }).then((res) => {
+    if (res.ok) {
+      alert("Zaktualizowano zgłoszenie");
+      loadReports();
+    } else {
+      alert("Błąd edycji");
+    }
+  });
+}
+
+function editFeedback(id) {
+  const newContent = prompt("Edytuj treść opinii:");
+  if (newContent === null || newContent.trim() === "") return;
+
+  fetch(`/api/feedback/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content: newContent }),
+  }).then((res) => {
+    if (res.ok) {
+      alert("Zaktualizowano opinię");
+      loadFeedback();
+    } else {
+      alert("Błąd edycji");
+    }
+  });
+}
+
 socket.on("chat_message", (msg) => {
   appendMessage(msg);
 });
@@ -220,7 +284,8 @@ function loadReports() {
           <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
             <strong>Kogo:</strong> ${r.reported_user} | 
             <strong>Powód:</strong> ${r.reason} 
-            <button onclick="deleteReport(${r.id})" style="background: #dc3545; padding: 2px 8px; font-size: 0.8em; margin-left: 10px;">Usuń</button>
+            <button onclick="editReport(${r.id})" class="btn-sm btn-edit" style="margin-left: 10px;">Edytuj</button>
+            <button onclick="deleteReport(${r.id})" class="btn-sm btn-delete" style="margin-left: 5px;">Usuń</button>
           </li>`;
       });
       html += "</ul>";
@@ -242,7 +307,8 @@ function loadFeedback() {
         html += `
           <li style="margin-bottom: 5px; border-bottom: 1px solid #eee; padding: 5px;">
             <em>${f.date}</em>: ${f.content}
-            <button onclick="deleteFeedback(${f.id})" style="background: #dc3545; padding: 2px 8px; font-size: 0.8em; margin-left: 10px;">Usuń</button>
+            <button onclick="editFeedback(${f.id})" class="btn-sm btn-edit" style="margin-left: 10px;">Edytuj</button>
+            <button onclick="deleteFeedback(${f.id})" class="btn-sm btn-delete" style="margin-left: 5px;">Usuń</button>
           </li>`;
       });
       html += "</ul>";

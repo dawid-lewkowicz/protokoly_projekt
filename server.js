@@ -148,7 +148,11 @@ app.post("/api/login", (req, res) => {
       const match = await bcrypt.compare(password, user.password);
       if (match) {
         logToFile(`Użytkownik ${user.username} zalogował się.`);
-        res.json({ message: "Zalogowano pomyślnie", username: user.username });
+        res.json({
+          message: "Zalogowano pomyślnie",
+          username: user.username,
+          id: user.id,
+        });
       } else {
         res.status(401).json({ error: "Błędne hasło" });
       }
