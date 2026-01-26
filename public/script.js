@@ -10,6 +10,7 @@ function login() {
 
   fetch("/api/login", {
     method: "POST",
+    // headers to informacja o wysyłaniu danych w formacie JSON
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   })
@@ -24,7 +25,7 @@ function login() {
         alert(data.error || "Błąd logowania.");
       }
     })
-    .catch((err) => console.error("Błąd sieci:", err));
+    .catch((err) => console.log(`Błąd sieci: ${err}`));
 }
 
 function register() {
@@ -49,7 +50,7 @@ function register() {
         alert(data.error || "Błąd rejestracji");
       }
     })
-    .catch((err) => console.error("Błąd sieci:", err));
+    .catch((err) => console.error(`Błąd sieci: ${err}`));
 }
 
 function logout() {
@@ -77,12 +78,7 @@ function enterChat(username, id) {
 
 function deleteAccount() {
   if (!currentUserId) return;
-  if (
-    !confirm(
-      "CZY NA PEWNO CHCESZ USUNĄĆ KONTO? Tej operacji nie da się cofnąć!",
-    )
-  )
-    return;
+  if (!confirm("Czy na pewno chcesz usunąć konto?")) return;
 
   fetch(`/api/users/${currentUserId}`, { method: "DELETE" }).then((res) => {
     if (res.ok) {
@@ -102,6 +98,7 @@ function changePassword() {
   fetch(`/api/users/${currentUserId}/password`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
+    // JSON.stringify() zmienia obiekt na jeden długi string
     body: JSON.stringify({ newPassword }),
   }).then(async (res) => {
     if (res.ok) alert("Hasło zmienione.");
@@ -117,6 +114,7 @@ function loadMessages() {
 
 function searchMessages() {
   const query = document.getElementById("search-input").value;
+  // encodeURIComponent zabezpiecza przed problemami z np. spacją w query
   fetch(`/api/messages?search=${encodeURIComponent(query)}`)
     .then((res) => res.json())
     .then((data) => renderMessages(data));
@@ -183,6 +181,7 @@ function appendMessage(msg) {
   `;
 
   container.appendChild(wrapper);
+  // automatyczne przewijanie na sam dół
   container.scrollTop = container.scrollHeight;
 }
 
@@ -214,6 +213,7 @@ function reportUser(reportedUser) {
     body: JSON.stringify({ reportedUser, reason }),
   }).then((res) => {
     if (res.ok) alert("Zgłoszono użytkownika.");
+    else alert("Błąd podczas zgłaszania.");
     loadReports();
   });
 }
