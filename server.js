@@ -1,4 +1,4 @@
-const express = require("express"); // tworzy serwet HTTP(API)
+const express = require("express"); // tworzy serwer HTTP(API)
 const sqlite3 = require("sqlite3").verbose(); // obsługuje bazę danych w pliku
 const bodyParser = require("body-parser"); //tłumacz języka JSON
 const http = require("http");
@@ -12,12 +12,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 const PORT = 3000;
 
-app.use(bodyParser.json());
+app.use(bodyParser.json()); // wysyłanie danych w formacie JSON pod zmienną req.body
 app.use(express.static("public"));
 
 function logToFile(message) {
-  const timestamp = new Date().toLocaleString();
-  const logMessage = `[${timestamp}] ${message}\n`;
+  const time = new Date().toLocaleString();
+  const logMessage = `[${time}] ${message}\n`;
 
   // dopisywanie logow na koncu pliku
   fs.appendFile("server.log", logMessage, (err) => {
@@ -63,17 +63,13 @@ db.serialize(() => {
 app.post("/api/register", async (req, res) => {
   const { username, password } = req.body;
   try {
-    const salt = 10;
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
       `INSERT INTO users (username, password) VALUES (?, ?)`,
       [username, hashedPassword],
       function (err) {
-        if (err)
-          return res
-            .status(400)
-            .json({ error: "Użytkownik już istnieje lub błąd bazy" });
+        if (err) return res.status(400).json({ error: "Błąd bazy" });
         res.json({ id: this.lastID, username });
       },
     );
@@ -116,7 +112,7 @@ app.post("/api/reports", (req, res) => {
   );
   mqttClient.publish(
     "moj_projekt/alerts",
-    "Zgłoszono uzytkownika: " + reportedUser,
+    `Zgłoszono uzytkownika: ${reportedUser}`,
   );
 });
 
@@ -163,6 +159,7 @@ app.post("/api/login", (req, res) => {
 // READ
 
 app.get("/api/messages", (req, res) => {
+  // przykład adresu: http://localhost:3000/api/messages?search=witam
   const search = req.query.search || "";
   const sql = `SELECT * FROM messages WHERE content LIKE ?`;
   db.all(sql, [`%${search}%`], (err, rows) => {
@@ -223,8 +220,7 @@ app.put("/api/users/:id/password", async (req, res) => {
   const { newPassword } = req.body;
 
   try {
-    const salt = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     db.run(
       `UPDATE users SET password = ? WHERE id = ?`,
@@ -234,10 +230,11 @@ app.put("/api/users/:id/password", async (req, res) => {
         if (this.changes === 0)
           return res.status(404).json({ error: "Nie znaleziono użytkownika" });
         res.json({ message: "Hasło zostało zmienione pomyślnie." });
+        logToFile(`Użytkownik ${id} zmienił hasło`);
       },
     );
   } catch (err) {
-    res.status(500).json({ error: "Błąd serwera przy szyfrowaniu" });
+    res.status(500).json({ error: "Błąd serwera przy  szyfrowaniu" });
   }
 });
 
@@ -253,6 +250,7 @@ app.put("/api/reports/:id", (req, res) => {
       if (this.changes === 0)
         return res.status(404).json({ error: "Nie znaleziono zgłoszenia" });
       res.json({ message: "Zaktualizowano powód zgłoszenia", id: id });
+      logToFile(`Zgłoszenie ${id} zostało zaktualizowane`);
     },
   );
 });
@@ -270,6 +268,7 @@ app.put("/api/feedback/:id", (req, res) => {
         return res.status(404).json({ error: "Nie znaleziono takiej opinii" });
       }
       res.json({ message: "Opinia została zaktualizowana", id: id });
+      logToFile(`Opinia ${id} została zaktualizowania`);
     },
   );
 });
@@ -280,6 +279,11 @@ app.delete("/api/messages/:id", (req, res) => {
   const id = req.params.id;
   db.run(`DELETE FROM messages WHERE id = ?`, [id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) {
+      return res
+        .status(404)
+        .json({ error: "Nie znaleziono takiej wiadomości" });
+    }
     res.json({ message: "Wiadomość usunięta", id });
     io.emit("message_deleted", id);
   });
@@ -289,6 +293,9 @@ app.delete("/api/feedback/:id", (req, res) => {
   const id = req.params.id;
   db.run(`DELETE FROM feedback WHERE id = ?`, [id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) {
+      return res.status(404).json({ error: "Nie znaleziono takiej opinii" });
+    }
     res.json({ message: "Opinia usunięta" });
   });
 });
@@ -297,6 +304,11 @@ app.delete("/api/reports/:id", (req, res) => {
   const id = req.params.id;
   db.run(`DELETE FROM reports WHERE id = ?`, [id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) {
+      return res
+        .status(404)
+        .json({ error: "Nie znaleziono takiego zgłoszenia" });
+    }
     res.json({ message: "Zgłoszenie usunięte" });
   });
 });
@@ -305,6 +317,11 @@ app.delete("/api/users/:id", (req, res) => {
   const id = req.params.id;
   db.run(`DELETE FROM users WHERE id = ?`, [id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
+    if (this.changes === 0) {
+      return res
+        .status(404)
+        .json({ error: "Nie znaleziono takiego użytkownika" });
+    }
     res.json({ message: "Użytkownik usunięty" });
   });
 });
@@ -317,24 +334,25 @@ const mqttClient = mqtt.connect("mqtt://broker.hivemq.com");
 
 mqttClient.on("connect", () => {
   console.log("Połączono z brokerem MQTT");
+  logToFile("Połączono z brokerem MQTT");
 
   mqttClient.subscribe("moj_projekt/status");
   mqttClient.subscribe("moj_projekt/alerts");
 
   setInterval(() => {
-    const statusMsg = "System OK: " + new Date().toLocaleTimeString();
+    const time = new Date().toLocaleTimeString();
+    const statusMsg = `System OK: ${time}`;
     mqttClient.publish("moj_projekt/status", statusMsg);
     console.log("MQTT: Wysłano status do brokera");
   }, 15 * 1000);
 });
 
 mqttClient.on("message", (topic, message) => {
+  //mqtt wysyła dane w formie bajtów
   const msgContent = message.toString();
   console.log(`Otrzymano wiadomość MQTT na temat ${topic}: ${msgContent}`);
 
-  if (topic === "moj_projekt/logs") {
-    logToFile(`[MQTT LOG] ${msgContent}`);
-  }
+  // wysyłka przez websocket, frontend nie musi się łączyć z mqtt
   io.emit("mqtt_message", {
     topic: topic,
     content: msgContent,
@@ -342,6 +360,7 @@ mqttClient.on("message", (topic, message) => {
   });
 });
 
+// uruchomienie serwera
 server.listen(PORT, () => {
   const msg = `Serwer działa na http://localhost:${PORT}`;
   console.log(msg);
