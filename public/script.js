@@ -42,7 +42,6 @@ function register() {
   })
     .then(async (res) => {
       if (res.ok) {
-        alert("Zarejestrowano pomyślnie!");
         const data = await res.json();
         enterChat(data.username, data.id);
       } else {
@@ -251,7 +250,7 @@ function loadFeedback() {
     .then((res) => res.json())
     .then((data) => {
       const container = document.getElementById("admin-content");
-      const currentHtml = container.innerHTML.includes("Brak zgłoszeń")
+      const currentHtml = container.innerHTML.includes("Brak zgłoszeń") // zwraca True lub Flase
         ? ""
         : container.innerHTML;
 
@@ -315,6 +314,7 @@ function deleteFeedback(id) {
   });
 }
 
+// nasłuchiwanie sygnałów od serwera
 socket.on("chat_message", (msg) => appendMessage(msg));
 socket.on("message_updated", () => loadMessages());
 socket.on("message_deleted", () => loadMessages());

@@ -89,7 +89,9 @@ app.post("/api/feedback", (req, res) => {
       if (err) return res.status(500).json({ error: err.message });
 
       res.json({ message: "Dziękujemy za opinię!", id: this.lastID });
-      console.log("Dodano nową opinię do bazy.");
+      const msg = "Dodano nową opinię do bazy.";
+      console.log(msg);
+      logToFile(msg);
     },
   );
 });
@@ -107,7 +109,9 @@ app.post("/api/reports", (req, res) => {
         message: `Zgłoszenie na użytkownika ${reportedUser} przyjęte.`,
         id: this.lastID,
       });
-      console.log(`Zgłoszono użytkownika: ${reportedUser}`);
+      const msg = `Zgłoszono użytkownika: ${reportedUser}`;
+      console.log(msg);
+      logToFile(msg);
     },
   );
   mqttClient.publish(
@@ -286,6 +290,7 @@ app.delete("/api/messages/:id", (req, res) => {
     }
     res.json({ message: "Wiadomość usunięta", id });
     io.emit("message_deleted", id);
+    logToFile(`Wiadomość ${id} została usunięta.`);
   });
 });
 
@@ -294,7 +299,7 @@ app.delete("/api/feedback/:id", (req, res) => {
   db.run(`DELETE FROM feedback WHERE id = ?`, [id], function (err) {
     if (err) return res.status(500).json({ error: err.message });
     if (this.changes === 0) {
-      return res.status(404).json({ error: "Nie znaleziono takiej opinii" });
+      return res.status(404).json({ error: "Nie znaleziono takiej opinii." });
     }
     res.json({ message: "Opinia usunięta" });
   });
@@ -344,7 +349,7 @@ mqttClient.on("connect", () => {
     const statusMsg = `System OK: ${time}`;
     mqttClient.publish("moj_projekt/status", statusMsg);
     console.log("MQTT: Wysłano status do brokera");
-  }, 15 * 1000);
+  }, 8 * 1000);
 });
 
 mqttClient.on("message", (topic, message) => {
