@@ -21,7 +21,7 @@ function logToFile(message) {
 
   // dopisywanie logow na koncu pliku
   fs.appendFile("server.log", logMessage, (err) => {
-    if (err) console.error("Błąd zapisu logów:", err);
+    if (err) console.error(`Błąd zapisu logów: ${err}`);
   });
 }
 
@@ -71,6 +71,7 @@ app.post("/api/register", async (req, res) => {
       function (err) {
         if (err) return res.status(400).json({ error: "Błąd bazy" });
         res.json({ id: this.lastID, username });
+        logToFile(`${username} zarejestrował się`);
       },
     );
   } catch (err) {
@@ -111,7 +112,7 @@ app.post("/api/reports", (req, res) => {
       });
       const msg = `Zgłoszono użytkownika: ${reportedUser}`;
       console.log(msg);
-      logToFile(msg);
+      logToFile(`[MQTT] ${msg}`);
     },
   );
   mqttClient.publish(
@@ -163,7 +164,7 @@ app.post("/api/login", (req, res) => {
 // READ
 
 app.get("/api/messages", (req, res) => {
-  // przykład adresu: http://localhost:3000/api/messages?search=witam
+  // przykład adresu: http://localhost:3000/api/messages?search=wiadomosc
   const search = req.query.search || "";
   const sql = `SELECT * FROM messages WHERE content LIKE ?`;
   db.all(sql, [`%${search}%`], (err, rows) => {
@@ -269,7 +270,7 @@ app.put("/api/feedback/:id", (req, res) => {
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
       if (this.changes === 0) {
-        return res.status(404).json({ error: "Nie znaleziono takiej opinii" });
+        return res.status(404).json({ error: "Nie znaleziono opinii" });
       }
       res.json({ message: "Opinia została zaktualizowana", id: id });
       logToFile(`Opinia ${id} została zaktualizowania`);
@@ -349,6 +350,7 @@ mqttClient.on("connect", () => {
     const statusMsg = `System OK: ${time}`;
     mqttClient.publish("moj_projekt/status", statusMsg);
     console.log("MQTT: Wysłano status do brokera");
+    logToFile(`[MQTT] ${statusMsg}`);
   }, 8 * 1000);
 });
 

@@ -180,6 +180,7 @@ function appendMessage(msg) {
   `;
 
   container.appendChild(wrapper);
+
   // automatyczne przewijanie na sam dół
   container.scrollTop = container.scrollHeight;
 }
@@ -221,12 +222,13 @@ function loadReports() {
   fetch("/api/reports")
     .then((res) => res.json())
     .then((data) => {
-      const container = document.getElementById("admin-content");
+      const container = document.getElementById("reports-container");
+
       if (data.length === 0) {
         container.innerHTML = "<p class='placeholder-text'>Brak zgłoszeń.</p>";
         return;
       }
-      let html = "<ul>";
+      let html = "<h5>Zgłoszenia:</h5><ul>";
       data.forEach((r) => {
         html += `
           <li class="admin-item">
@@ -241,6 +243,7 @@ function loadReports() {
           </li>`;
       });
       html += "</ul>";
+
       container.innerHTML = html;
     });
 }
@@ -249,14 +252,12 @@ function loadFeedback() {
   fetch("/api/feedback")
     .then((res) => res.json())
     .then((data) => {
-      const container = document.getElementById("admin-content");
-      const currentHtml = container.innerHTML.includes("Brak zgłoszeń") // zwraca True lub Flase
-        ? ""
-        : container.innerHTML;
+      const container = document.getElementById("feedback-container");
 
-      let html = "<hr class='admin-divider'><h5>Opinie:</h5><ul>";
-      if (data.length === 0)
+      let html = "<h5>Opinie:</h5><ul>";
+      if (data.length === 0) {
         html += "<p class='placeholder-text'>Brak opinii.</p>";
+      }
 
       data.forEach((f) => {
         html += `
@@ -272,7 +273,8 @@ function loadFeedback() {
             </li>`;
       });
       html += "</ul>";
-      container.innerHTML = currentHtml + html;
+
+      container.innerHTML = html;
     });
 }
 
@@ -314,7 +316,7 @@ function deleteFeedback(id) {
   });
 }
 
-// nasłuchiwanie sygnałów od serwera
+// nasłuchiwanie sygnałów websocket od serwera
 socket.on("chat_message", (msg) => appendMessage(msg));
 socket.on("message_updated", () => loadMessages());
 socket.on("message_deleted", () => loadMessages());
